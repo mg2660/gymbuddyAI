@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --canvas: #f5f1e8;
+  --ink: #1b1d1a;
+  --moss: #495d41;
+  --clay: #b76e45;
+  --sand: #e4d4bf;
+  --cream: #fffaf2;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(183, 110, 69, 0.2), transparent 24%),
+    radial-gradient(circle at 85% 12%, rgba(73, 93, 65, 0.14), transparent 22%),
+    radial-gradient(circle at bottom right, rgba(183, 110, 69, 0.12), transparent 24%),
+    linear-gradient(180deg, #f9f5ec 0%, #f5f1e8 42%, #efe6d7 100%);
+  color: var(--ink);
+  font-family: "Trebuchet MS", "Segoe UI", "Aptos", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.card-surface {
+  background: rgba(255, 250, 242, 0.82);
+  backdrop-filter: blur(16px);
+  box-shadow:
+    0 18px 40px rgba(27, 29, 26, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.ink-surface {
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 34%),
+    linear-gradient(145deg, #1b1d1a 0%, #263026 100%);
+  box-shadow: 0 24px 50px rgba(27, 29, 26, 0.2);
+}
+
+.soft-divider {
+  border: 1px solid rgba(27, 29, 26, 0.06);
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.screen-fade {
+  animation: screen-fade 0.45s ease-out;
+}
+
+.float-in {
+  animation: float-in 0.55s ease-out;
+}
+
+::selection {
+  background: rgba(183, 110, 69, 0.22);
+  color: var(--ink);
+}
+
+@keyframes screen-fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
