@@ -86,7 +86,7 @@ export default async function CalendarPage({
         <SectionHeading
           eyebrow="Calendar"
           title="Your training rhythm"
-          description="Instead of one giant calendar, this page is split into mobile-first views so you can scan fast, zoom into weekly rhythm, or read the full day-by-day log."
+          description=""
         />
 
         <div className="mt-6 space-y-4">

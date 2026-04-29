@@ -79,7 +79,16 @@ export function AuthForm() {
   }
 
   return (
-    <div className="card-surface w-full rounded-[30px] border border-black/5 p-6 shadow-card sm:p-8">
+    <div className="card-surface w-full rounded-[30px] border border-black/5 p-5 shadow-card sm:p-8">
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-moss">
+          {mode === "sign_up" ? "Create account" : "Welcome back"}
+        </p>
+        <h2 className="text-2xl font-semibold text-ink">
+          {mode === "sign_up" ? "Start your training setup" : "Continue your workout flow"}
+        </h2>
+      </div>
+
       <div className="flex items-center gap-2 rounded-full bg-sand p-1 text-sm">
         <button
           type="button"

@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 interface TodaySpecialRequestInputProps {
   defaultValue?: string;
 }
@@ -11,6 +15,22 @@ const quickIdeas = [
 ];
 
 export function TodaySpecialRequestInput({ defaultValue }: TodaySpecialRequestInputProps) {
+  const [value, setValue] = useState(defaultValue ?? "");
+
+  function applyIdea(idea: string) {
+    setValue((current) => {
+      if (!current.trim()) {
+        return idea;
+      }
+
+      if (current.includes(idea)) {
+        return current;
+      }
+
+      return `${current.trim()} ${idea}`.trim();
+    });
+  }
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -21,7 +41,8 @@ export function TodaySpecialRequestInput({ defaultValue }: TodaySpecialRequestIn
           id="todaySpecialRequest"
           name="todaySpecialRequest"
           rows={3}
-          defaultValue={defaultValue ?? ""}
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
           className="w-full rounded-[24px] border border-black/10 bg-white/70 px-4 py-4 text-sm leading-6 outline-none transition focus:border-moss"
           placeholder="Example: I feel low energy today, so keep it lighter and shorter."
         />
@@ -29,12 +50,14 @@ export function TodaySpecialRequestInput({ defaultValue }: TodaySpecialRequestIn
 
       <div className="flex flex-wrap gap-2">
         {quickIdeas.map((idea) => (
-          <span
+          <button
             key={idea}
-            className="rounded-full bg-sand px-3 py-2 text-[11px] font-medium uppercase tracking-[0.12em] text-ink"
+            type="button"
+            onClick={() => applyIdea(idea)}
+            className="rounded-full bg-sand px-3 py-2 text-[11px] font-medium uppercase tracking-[0.12em] text-ink transition hover:bg-clay hover:text-white"
           >
             {idea}
-          </span>
+          </button>
         ))}
       </div>
     </div>

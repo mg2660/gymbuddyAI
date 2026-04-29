@@ -26,10 +26,18 @@ body {
     linear-gradient(180deg, #f9f5ec 0%, #f5f1e8 42%, #efe6d7 100%);
   color: var(--ink);
   font-family: "Trebuchet MS", "Segoe UI", "Aptos", sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
 
 * {
   box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
 
 .card-surface {
@@ -93,5 +101,13 @@ body {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
   }
 }

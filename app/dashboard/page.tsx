@@ -13,7 +13,7 @@ import {
   getCurrentUserWorkoutHistory,
   getTodaysWorkoutRecommendation,
 } from "@/lib/data/workouts";
-import { getExperienceCardCopy, personalizeWorkoutExercise } from "@/lib/workout-personalization";
+import { personalizeWorkoutExercise } from "@/lib/workout-personalization";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -34,10 +34,11 @@ export default async function DashboardPage() {
     redirect("/onboarding");
   }
 
-  const todayRecommendation = await getTodaysWorkoutRecommendation();
-  const calendar = await getCurrentUserWorkoutCalendar();
-  const workoutHistory = await getCurrentUserWorkoutHistory();
-  const experienceCopy = getExperienceCardCopy(profile.experienceLevel);
+  const [todayRecommendation, calendar, workoutHistory] = await Promise.all([
+    getTodaysWorkoutRecommendation(),
+    getCurrentUserWorkoutCalendar(),
+    getCurrentUserWorkoutHistory(),
+  ]);
   const personalizedExercises = todayRecommendation
     ? todayRecommendation.exercises.map((exercise) =>
         personalizeWorkoutExercise(exercise, profile.experienceLevel, workoutHistory),
@@ -65,9 +66,6 @@ export default async function DashboardPage() {
             </span>
             <span className="rounded-full bg-white/80 px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-[0.1em] text-ink/75 shadow-card">
               {todayRecommendation.focus.replaceAll("_", " ")}
-            </span>
-            <span className="rounded-full bg-white/80 px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-[0.1em] text-ink/75 shadow-card">
-              {experienceCopy.label}: {experienceCopy.focus}
             </span>
             {todayRecommendation.todaySpecialRequest ? (
               <span className="rounded-full bg-clay px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-[0.1em] text-white shadow-card">
@@ -103,14 +101,13 @@ export default async function DashboardPage() {
         </section>
       ) : (
         <section className="space-y-5">
-          <article className="ink-surface float-in rounded-[36px] px-5 py-6 text-cream sm:px-7 sm:py-7">
-            <p className="text-xs uppercase tracking-[0.24em] text-cream/60">Generate</p>
-            <h2 className="mt-3 max-w-md text-3xl font-semibold leading-tight sm:text-[2.7rem]">
-              Let&apos;s build the right session for today.
+          <article className="ink-surface float-in rounded-[30px] px-5 py-5 text-cream sm:px-6 sm:py-6">
+            <p className="text-xs uppercase tracking-[0.24em] text-cream/60">Today</p>
+            <h2 className="mt-2 max-w-sm text-2xl font-semibold leading-tight sm:text-[2.35rem]">
+              Let&apos;s build the right session.
             </h2>
-            <p className="mt-4 max-w-lg text-sm leading-7 text-cream/80">
-              Gym Buddy AI keeps your long-term profile in the background so this screen can stay fully focused on
-              the daily workout experience.
+            <p className="mt-3 max-w-md text-sm leading-6 text-cream/80">
+              We&apos;ll use your profile, recent activity, and recovery context before generating today&apos;s plan.
             </p>
           </article>
 

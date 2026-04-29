@@ -1,6 +1,5 @@
 import { ActionSubmitButton } from "@/components/action-submit-button";
 import { saveExerciseCardFeedback } from "@/lib/actions/workouts";
-import { experienceLevelDetails } from "@/lib/onboarding";
 import { hasSavedFeedback } from "@/lib/workout-personalization";
 import type { ExperienceLevel, WorkoutExercise } from "@/lib/types";
 
@@ -300,7 +299,6 @@ function ExerciseFeedbackSection({
 }
 
 export function WorkoutCard({ exercise, index, experienceLevel }: WorkoutCardProps) {
-  const experienceDetails = experienceLevelDetails[experienceLevel];
   const cueTitle = experienceLevel === "beginner" ? "Form cues" : "Execution cues";
 
   return (
@@ -310,7 +308,6 @@ export function WorkoutCard({ exercise, index, experienceLevel }: WorkoutCardPro
           <div>
             <p className="text-xs uppercase tracking-[0.28em] text-moss">Exercise {index + 1}</p>
             <h3 className="mt-2 text-[1.75rem] font-semibold leading-tight text-ink">{exercise.name}</h3>
-            <p className="mt-2 text-sm leading-6 text-ink/70">{experienceDetails.focus}</p>
           </div>
           <span className="rounded-full bg-sand px-3 py-1 text-xs font-medium text-ink">{exercise.muscleGroup}</span>
         </div>
