@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { GenerateWorkoutButton } from "@/components/generate-workout-button";
+import { CalendarLinkButton } from "@/components/calendar-link-button";
 import { MarkWorkoutDoneButton } from "@/components/mark-workout-done-button";
 import { MobileNav } from "@/components/mobile-nav";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -7,7 +8,12 @@ import { WorkoutCard } from "@/components/workout-card";
 import { WorkoutRoutineActions } from "@/components/workout-routine-actions";
 import { WorkoutSummaryCard } from "@/components/workout-summary-card";
 import { getCurrentUserProfile } from "@/lib/data/profile";
-import { getTodaysWorkoutRecommendation } from "@/lib/data/workouts";
+import {
+  getCurrentUserWorkoutCalendar,
+  getCurrentUserWorkoutHistory,
+  getTodaysWorkoutRecommendation,
+} from "@/lib/data/workouts";
+import { getExperienceCardCopy, personalizeWorkoutExercise } from "@/lib/workout-personalization";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +35,14 @@ export default async function DashboardPage() {
   }
 
   const todayRecommendation = await getTodaysWorkoutRecommendation();
+  const calendar = await getCurrentUserWorkoutCalendar();
+  const workoutHistory = await getCurrentUserWorkoutHistory();
+  const experienceCopy = getExperienceCardCopy(profile.experienceLevel);
+  const personalizedExercises = todayRecommendation
+    ? todayRecommendation.exercises.map((exercise) =>
+        personalizeWorkoutExercise(exercise, profile.experienceLevel, workoutHistory),
+      )
+    : [];
 
   return (
     <main className="screen-fade mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-5 px-4 py-5 sm:px-6 sm:py-6">
@@ -37,7 +51,10 @@ export default async function DashboardPage() {
           Gym Buddy AI
         </p>
         <MobileNav active="dashboard" compact />
-        <SignOutButton compact />
+        <div className="flex items-center gap-2">
+          <CalendarLinkButton compact />
+          <SignOutButton compact />
+        </div>
       </header>
 
       {todayRecommendation ? (
@@ -49,6 +66,9 @@ export default async function DashboardPage() {
             <span className="rounded-full bg-white/80 px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-[0.1em] text-ink/75 shadow-card">
               {todayRecommendation.focus.replaceAll("_", " ")}
             </span>
+            <span className="rounded-full bg-white/80 px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-[0.1em] text-ink/75 shadow-card">
+              {experienceCopy.label}: {experienceCopy.focus}
+            </span>
             {todayRecommendation.todaySpecialRequest ? (
               <span className="rounded-full bg-clay px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-[0.1em] text-white shadow-card">
                 Today: {todayRecommendation.todaySpecialRequest}
@@ -57,9 +77,9 @@ export default async function DashboardPage() {
           </div>
 
           <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 hide-scrollbar sm:-mx-6 sm:px-6">
-            {todayRecommendation.exercises.map((exercise, index) => (
+            {personalizedExercises.map((exercise, index) => (
               <div key={exercise.name} className="w-[88vw] max-w-[360px] shrink-0 sm:w-[360px]">
-                <WorkoutCard exercise={exercise} index={index} />
+                <WorkoutCard exercise={exercise} index={index} experienceLevel={profile.experienceLevel} />
               </div>
             ))}
             <div className="w-[88vw] max-w-[360px] shrink-0 sm:w-[360px]">
@@ -95,7 +115,7 @@ export default async function DashboardPage() {
           </article>
 
           <section className="card-surface rounded-[34px] border border-black/5 p-5 shadow-card sm:p-6">
-            <GenerateWorkoutButton />
+            <GenerateWorkoutButton unresolvedDates={calendar.unresolvedDates} />
           </section>
         </section>
       )}

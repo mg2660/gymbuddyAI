@@ -192,5 +192,6 @@ export async function saveOnboardingProfile(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/dashboard");
   revalidatePath("/onboarding");
+  revalidatePath("/profile");
   redirect("/dashboard");
 }

@@ -9,11 +9,13 @@ export const dynamic = "force-dynamic";
 
 const onboardingHighlights = [
   "Primary fitness goal and training intent",
+  "Coaching style based on beginner, intermediate, or advanced needs",
   "Realistic weekly training frequency",
   "Session length limit",
   "Home or gym equipment access",
   "Machines or movements to avoid",
   "Special workout requests to always remember",
+  "How much logging friction feels acceptable on workout day",
 ];
 
 export default async function OnboardingPage() {
@@ -56,7 +58,7 @@ export default async function OnboardingPage() {
           <SectionHeading
             eyebrow="Onboarding"
             title={profile ? "Update your training profile" : "Create your training profile"}
-            description="This saves the goal, constraints, and custom preferences Gym Buddy AI should keep in memory for every future recommendation."
+            description="This saves the goal, coaching style, constraints, and custom preferences Gym Buddy AI should keep in memory for every future recommendation."
           />
 
           <div className="mt-8">

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 interface MobileNavProps {
-  active: "dashboard" | "profile";
+  active: "dashboard" | "profile" | "calendar";
   compact?: boolean;
 }
 

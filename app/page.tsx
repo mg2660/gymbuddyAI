@@ -164,7 +164,7 @@ export default async function HomePage() {
           <div className="flex snap-x gap-4 overflow-x-auto pb-2">
             {sampleRecommendation.exercises.map((exercise, index) => (
               <div key={exercise.name} className="min-w-[280px] max-w-[320px] flex-1">
-                <WorkoutCard exercise={exercise} index={index} />
+                <WorkoutCard exercise={exercise} index={index} experienceLevel={sampleProfile.experienceLevel} />
               </div>
             ))}
           </div>

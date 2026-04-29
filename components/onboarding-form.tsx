@@ -1,4 +1,4 @@
-import { fitnessGoals, experienceLevels } from "@/lib/onboarding";
+import { experienceLevelDetails, experienceLevels, fitnessGoals } from "@/lib/onboarding";
 import { saveOnboardingProfile } from "@/lib/actions/profile";
 import type { UserProfile } from "@/lib/types";
 
@@ -81,24 +81,6 @@ export function OnboardingForm({ initialProfile }: OnboardingFormProps) {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="experienceLevel" className="text-sm font-medium text-ink">
-            Experience level
-          </label>
-          <select
-            id="experienceLevel"
-            name="experienceLevel"
-            defaultValue={initialProfile?.experienceLevel ?? "intermediate"}
-            className="w-full rounded-2xl border border-black/10 bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-moss"
-          >
-            {experienceLevels.map((level) => (
-              <option key={level} value={level}>
-                {level}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-2">
           <label htmlFor="trainingDaysPerWeek" className="text-sm font-medium text-ink">
             Training days per week
           </label>
@@ -144,6 +126,56 @@ export function OnboardingForm({ initialProfile }: OnboardingFormProps) {
             <option value="home">Home</option>
             <option value="hybrid">Both</option>
           </select>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-ink">Experience level</p>
+          <p className="text-sm leading-6 text-ink/70">
+            This changes how the workout cards coach you: more guidance for beginners, smarter progression for
+            intermediates, and tighter performance control for advanced lifters.
+          </p>
+        </div>
+
+        <div className="grid gap-3">
+          {experienceLevels.map((level) => {
+            const details = experienceLevelDetails[level];
+            const isChecked = (initialProfile?.experienceLevel ?? "intermediate") === level;
+
+            return (
+              <label
+                key={level}
+                className="group cursor-pointer rounded-[28px] border border-black/10 bg-white/70 p-4 transition hover:border-moss has-[:checked]:border-moss has-[:checked]:bg-white"
+              >
+                <input
+                  type="radio"
+                  name="experienceLevel"
+                  value={level}
+                  defaultChecked={isChecked}
+                  className="sr-only"
+                  required
+                />
+
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-base font-semibold capitalize text-ink">{details.label}</p>
+                      <span className="rounded-full bg-sand px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink">
+                        {details.focus}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-ink/72">{details.description}</p>
+                    <p className="mt-3 text-sm font-medium leading-6 text-moss">{details.cardStyle}</p>
+                  </div>
+
+                  <span className="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full border border-black/15 bg-white group-has-[:checked]:border-moss">
+                    <span className="h-2.5 w-2.5 rounded-full bg-moss opacity-0 transition group-has-[:checked]:opacity-100" />
+                  </span>
+                </div>
+              </label>
+            );
+          })}
         </div>
       </section>
 

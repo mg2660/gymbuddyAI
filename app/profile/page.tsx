@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CalendarLinkButton } from "@/components/calendar-link-button";
 import { MobileNav } from "@/components/mobile-nav";
 import { SignOutButton } from "@/components/sign-out-button";
 import { getCurrentUserProfile } from "@/lib/data/profile";
+import { experienceLevelDetails } from "@/lib/onboarding";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +29,8 @@ export default async function ProfilePage() {
     redirect("/onboarding");
   }
 
+  const experienceDetails = experienceLevelDetails[profile.experienceLevel];
+
   return (
     <main className="screen-fade mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-5 px-4 py-5 sm:px-6 sm:py-6">
       <header className="flex items-center justify-between gap-2">
@@ -34,7 +38,10 @@ export default async function ProfilePage() {
           Gym Buddy AI
         </p>
         <MobileNav active="profile" compact />
-        <SignOutButton compact />
+        <div className="flex items-center gap-2">
+          <CalendarLinkButton compact />
+          <SignOutButton compact />
+        </div>
       </header>
 
       <section className="ink-surface float-in overflow-hidden rounded-[36px] px-5 py-6 text-cream sm:px-7 sm:py-7">
@@ -82,7 +89,8 @@ export default async function ProfilePage() {
             </div>
             <div className="rounded-[24px] bg-white/60 p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-moss">Experience</p>
-              <p className="mt-2 text-lg font-semibold text-ink">{profile.experienceLevel}</p>
+              <p className="mt-2 text-lg font-semibold text-ink">{experienceDetails.label}</p>
+              <p className="mt-2 text-sm leading-6 text-ink/72">{experienceDetails.cardStyle}</p>
             </div>
             <div className="rounded-[24px] bg-white/60 p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-moss">Training Setup</p>

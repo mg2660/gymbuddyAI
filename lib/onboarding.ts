@@ -1,4 +1,4 @@
-import type { ExperienceLevel, FitnessGoal } from "@/lib/types";
+import type { ExerciseFeedbackMode, ExperienceLevel, FitnessGoal } from "@/lib/types";
 
 export const fitnessGoals: FitnessGoal[] = [
   "bulking",
@@ -11,6 +11,42 @@ export const fitnessGoals: FitnessGoal[] = [
 
 export const experienceLevels: ExperienceLevel[] = ["beginner", "intermediate", "advanced"];
 
+export const experienceLevelDetails: Record<
+  ExperienceLevel,
+  {
+    label: string;
+    focus: string;
+    description: string;
+    cardStyle: string;
+    feedbackMode: ExerciseFeedbackMode;
+  }
+> = {
+  beginner: {
+    label: "Beginner",
+    focus: "Confidence + clarity",
+    description:
+      "Best for people learning movement basics, building consistency, or returning after a long break.",
+    cardStyle: "Guided cards with simple cues, easier alternatives, and low-pressure weight guidance.",
+    feedbackMode: "lazy",
+  },
+  intermediate: {
+    label: "Intermediate",
+    focus: "Progression + efficiency",
+    description:
+      "Best for people who know the main lifts, want faster progress, and prefer quick decisions over full logging.",
+    cardStyle: "Assisted cards with last performance, smart weight suggestions, and 1-tap feedback.",
+    feedbackMode: "quick",
+  },
+  advanced: {
+    label: "Advanced",
+    focus: "Optimization + performance",
+    description:
+      "Best for experienced lifters who care about precise targets, training quality, and managing fatigue over time.",
+    cardStyle: "Performance cards with intensity targets, tempo, technique notes, and full logging controls.",
+    feedbackMode: "full",
+  },
+};
+
 export const onboardingQuestions = [
   {
     id: "goal",
@@ -21,6 +57,11 @@ export const onboardingQuestions = [
     id: "training_days_per_week",
     prompt: "How many days per week can you realistically train?",
     reason: "This determines split selection and recovery spacing.",
+  },
+  {
+    id: "experience_level",
+    prompt: "What coaching style fits your current training experience?",
+    reason: "This changes how much guidance, structure, and control each workout card should show.",
   },
   {
     id: "session_length_minutes",

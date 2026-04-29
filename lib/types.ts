@@ -7,6 +7,15 @@ export type FitnessGoal =
   | "general_fitness";
 
 export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
+export type ExerciseFeedbackMode = "lazy" | "quick" | "full";
+export type ExerciseCompletionStatus = "completed" | "skipped" | "substituted";
+export type WorkoutDayStatus = "completed_in_app" | "completed_elsewhere" | "rest_day" | "missed";
+export type ExerciseDifficultyFeedback =
+  | "too_easy"
+  | "just_right"
+  | "too_hard"
+  | "need_clarity"
+  | "need_alternative";
 
 export type WorkoutFocus =
   | "push"
@@ -52,6 +61,16 @@ export interface UserProfile {
   specialRequests: UserSpecialRequest[];
 }
 
+export interface WorkoutExerciseFeedback {
+  completionStatus?: ExerciseCompletionStatus;
+  difficulty?: ExerciseDifficultyFeedback;
+  loggedWeight?: string;
+  loggedReps?: number;
+  loggedSets?: number;
+  loggedRpe?: string;
+  notes?: string;
+}
+
 export interface WorkoutExercise {
   name: string;
   muscleGroup: string;
@@ -61,6 +80,13 @@ export interface WorkoutExercise {
   warmup?: string[];
   tips: string[];
   substitute?: string;
+  loadGuidance?: string;
+  lastPerformance?: string;
+  intensityTarget?: string;
+  tempo?: string;
+  advancedTechnique?: string;
+  fatigueNote?: string;
+  feedback?: WorkoutExerciseFeedback;
 }
 
 export interface WorkoutSessionSummary {
@@ -74,6 +100,21 @@ export interface WorkoutSession extends WorkoutSessionSummary {
   performedAt: string;
   durationMinutes: number;
   exercises: WorkoutExercise[];
+}
+
+export interface WorkoutDayLog {
+  date: string;
+  status: WorkoutDayStatus;
+  notes?: string;
+}
+
+export interface WorkoutCalendarDay {
+  date: string;
+  dayLabel: string;
+  dayNumber: string;
+  isToday: boolean;
+  status: WorkoutDayStatus | "unresolved" | "idle";
+  notes?: string;
 }
 
 export interface WorkoutRecommendation {

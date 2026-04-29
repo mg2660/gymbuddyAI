@@ -20,6 +20,25 @@ export const workoutExerciseSchema = z.object({
   warmup: z.array(z.string()),
   tips: z.array(z.string()).min(1).max(3),
   substitute: z.string().nullable(),
+  loadGuidance: z.string().min(1).nullable().optional(),
+  lastPerformance: z.string().min(1).nullable().optional(),
+  intensityTarget: z.string().min(1).nullable().optional(),
+  tempo: z.string().min(1).nullable().optional(),
+  advancedTechnique: z.string().min(1).nullable().optional(),
+  fatigueNote: z.string().min(1).nullable().optional(),
+  feedback: z
+    .object({
+      completionStatus: z.enum(["completed", "skipped", "substituted"]).optional(),
+      difficulty: z
+        .enum(["too_easy", "just_right", "too_hard", "need_clarity", "need_alternative"])
+        .optional(),
+      loggedWeight: z.string().min(1).optional(),
+      loggedReps: z.number().int().positive().optional(),
+      loggedSets: z.number().int().positive().optional(),
+      loggedRpe: z.string().min(1).optional(),
+      notes: z.string().min(1).optional(),
+    })
+    .optional(),
 });
 
 export const workoutRecommendationSchema = z.object({
@@ -78,6 +97,7 @@ export const workoutRequestSchema = z.object({
       muscleGroupsHit: z.array(z.string()),
       intensity: z.enum(["light", "moderate", "high"]),
       notes: z.string(),
+      exercises: z.array(workoutExerciseSchema).optional(),
     }),
   ),
   olderSessionSummaries: z.array(
@@ -86,6 +106,13 @@ export const workoutRequestSchema = z.object({
       muscleGroupsHit: z.array(z.string()),
       intensity: z.enum(["light", "moderate", "high"]),
       notes: z.string(),
+    }),
+  ),
+  recentActivityTimeline: z.array(
+    z.object({
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      status: z.enum(["completed_in_app", "completed_elsewhere", "rest_day", "missed"]),
+      notes: z.string().optional(),
     }),
   ),
 });

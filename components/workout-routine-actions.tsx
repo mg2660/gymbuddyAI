@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { ActionSubmitButton } from "@/components/action-submit-button";
 import { regenerateTodaysWorkout, resetTodaysWorkout } from "@/lib/actions/workouts";
 
 interface WorkoutRoutineActionsProps {
@@ -17,12 +18,7 @@ function WorkoutOptionsModal({
 }) {
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/20 p-4 backdrop-blur-md">
-      <button
-        type="button"
-        aria-label="Close modal"
-        className="absolute inset-0 cursor-default"
-        onClick={onClose}
-      />
+      <button type="button" aria-label="Close modal" className="absolute inset-0 cursor-default" onClick={onClose} />
 
       <div className="card-surface relative z-[101] w-full max-w-sm rounded-[30px] border border-black/5 p-4 shadow-card">
         <div className="flex items-start justify-between gap-4">
@@ -41,28 +37,26 @@ function WorkoutOptionsModal({
             onClick={onClose}
             className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-black/10 bg-white/70 text-ink transition hover:border-moss"
           >
-            ×
+            x
           </button>
         </div>
 
         <div className="mt-5 space-y-3">
           <form action={regenerateTodaysWorkout}>
             <input type="hidden" name="todaySpecialRequest" value={todaySpecialRequest ?? ""} />
-            <button
-              type="submit"
-              className="w-full rounded-full border border-black/10 bg-white/85 px-5 py-4 text-sm font-semibold text-ink transition hover:border-moss"
-            >
-              Generate another
-            </button>
+            <ActionSubmitButton
+              label="Generate another"
+              loadingLabel="Generating another..."
+              variant="secondary"
+            />
           </form>
 
           <form action={resetTodaysWorkout}>
-            <button
-              type="submit"
-              className="w-full rounded-full border border-black/10 bg-white/85 px-5 py-4 text-sm font-semibold text-ink transition hover:border-moss"
-            >
-              Back to request
-            </button>
+            <ActionSubmitButton
+              label="Modify request"
+              loadingLabel="Opening request..."
+              variant="secondary"
+            />
           </form>
         </div>
       </div>
@@ -92,10 +86,7 @@ export function WorkoutRoutineActions({ todaySpecialRequest }: WorkoutRoutineAct
       </button>
 
       {mounted && isOpen ? (
-        <WorkoutOptionsModal
-          todaySpecialRequest={todaySpecialRequest}
-          onClose={() => setIsOpen(false)}
-        />
+        <WorkoutOptionsModal todaySpecialRequest={todaySpecialRequest} onClose={() => setIsOpen(false)} />
       ) : null}
     </>
   );

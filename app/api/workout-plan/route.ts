@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { buildWorkoutPrompt } from "@/lib/ai/workout-prompt";
+import { workoutResponseSchema } from "@/lib/ai/workout-prompt";
 import { workoutRecommendationSchema, workoutRequestSchema } from "@/lib/ai/validation";
 
 export async function POST(request: Request) {
@@ -38,69 +39,7 @@ export async function POST(request: Request) {
         format: {
           type: "json_schema",
           name: "workout_recommendation",
-          schema: {
-            type: "object",
-            additionalProperties: false,
-            required: ["title", "focus", "rationale", "summaryBullets", "exercises"],
-            properties: {
-              title: { type: "string" },
-              focus: {
-                type: "string",
-                enum: [
-                  "push",
-                  "pull",
-                  "legs",
-                  "upper_body",
-                  "lower_body",
-                  "full_body",
-                  "single_muscle",
-                  "recovery",
-                ],
-              },
-              rationale: {
-                type: "array",
-                items: { type: "string" },
-                minItems: 2,
-                maxItems: 5,
-              },
-              summaryBullets: {
-                type: "array",
-                items: { type: "string" },
-                minItems: 2,
-                maxItems: 5,
-              },
-              exercises: {
-                type: "array",
-                minItems: 3,
-                maxItems: 8,
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  required: ["name", "muscleGroup", "sets", "reps", "restSeconds", "warmup", "tips", "substitute"],
-                  properties: {
-                    name: { type: "string" },
-                    muscleGroup: { type: "string" },
-                    sets: { type: "number" },
-                    reps: { type: "string" },
-                    restSeconds: { type: "number" },
-                    warmup: {
-                      type: "array",
-                      items: { type: "string" },
-                    },
-                    tips: {
-                      type: "array",
-                      items: { type: "string" },
-                      minItems: 1,
-                      maxItems: 3,
-                    },
-                    substitute: {
-                      type: ["string", "null"],
-                    },
-                  },
-                },
-              },
-            },
-          },
+          schema: workoutResponseSchema,
         },
       },
     });
