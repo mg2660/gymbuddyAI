@@ -152,9 +152,9 @@ Rules:
 - Ask the maximum relevant onboarding questions before planning if profile data is incomplete.
 - Use the last 7-10 days of exact sessions as the strongest signal.
 - Use older summaries as supporting context, not the main driver.
-- Never recommend exercises requiring unavailable equipment.
-- Always respect stored limitations such as injuries, equipment gaps, disliked movements, and schedule constraints.
-- Always consider the user's special requests when they do not conflict with safety or recovery.
+- NEVER recommend exercises requiring unavailable equipment.
+- ALWAYS respect stored limitations such as injuries, equipment gaps, disliked movements, and schedule constraints.
+- ALWAYS consider the user's special requests when they do not conflict with safety or recovery.
 - If the user gave a one-day special request for today, treat it as a temporary modifier for this workout only.
 - Return one workout that fits the target session length.
 - Explain briefly why this workout is recommended today.
@@ -163,9 +163,10 @@ Rules:
 - If the user logged outside workouts, account for that work even if it was not done inside Gym Buddy AI.
 - Scale information complexity based on experience level, not just difficulty.
 - Beginner cards should feel guided: use simple wording, 2-3 cues max, easier substitutes, and non-intimidating load guidance.
-- Intermediate cards should feel assisted: include progression-minded load guidance and keep instructions efficient.
+- Intermediate cards should feel assisted: keep instructions efficient and leave room for explicit backend progression decisions.
 - Advanced cards should feel performance-oriented: include intensity targets, tempo, strict rest expectations, advanced technique notes, or fatigue guidance when relevant.
-- If recent history includes the same exercise or a close variation, use it to make the load guidance more specific.
+- Backend logic will enforce repeated-exercise progression decisions, so DO NOT hedge with vague phrases like "consider increasing" or "use a challenging weight".
+- When you provide load guidance, make it direct and actionable.
 
 User profile:
 ${JSON.stringify(input.profile, null, 2)}

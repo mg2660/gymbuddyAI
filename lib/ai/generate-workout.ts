@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import type { UserProfile, WorkoutDayLog, WorkoutRecommendation, WorkoutSession } from "@/lib/types";
 import { buildWorkoutPrompt, workoutResponseSchema } from "@/lib/ai/workout-prompt";
 import { workoutRecommendationSchema } from "@/lib/ai/validation";
+import { personalizeWorkoutExercises } from "@/lib/workout-personalization";
 
 export interface GenerateWorkoutArgs {
   profile: UserProfile;
@@ -64,10 +65,8 @@ export async function generateWorkoutRecommendation({
     throw new Error("AI returned an invalid workout structure.");
   }
 
-  return {
-    ...parsed.data,
-    todaySpecialRequest,
-    exercises: parsed.data.exercises.map((exercise) => ({
+  const exercises = personalizeWorkoutExercises(
+    parsed.data.exercises.map((exercise) => ({
       ...exercise,
       substitute: exercise.substitute ?? undefined,
       loadGuidance: exercise.loadGuidance ?? undefined,
@@ -77,5 +76,13 @@ export async function generateWorkoutRecommendation({
       advancedTechnique: exercise.advancedTechnique ?? undefined,
       fatigueNote: exercise.fatigueNote ?? undefined,
     })),
+    profile.experienceLevel,
+    recentSessions,
+  );
+
+  return {
+    ...parsed.data,
+    todaySpecialRequest,
+    exercises,
   };
 }

@@ -17,6 +17,36 @@ function FeedbackPill({ label }: { label: string }) {
   );
 }
 
+function ProgressionBadge({ exercise }: { exercise: WorkoutExercise }) {
+  if (!exercise.progression) {
+    return null;
+  }
+
+  const toneClass =
+    exercise.progression.action === "increase"
+      ? "bg-moss text-cream"
+      : exercise.progression.action === "decrease"
+        ? "bg-clay text-white"
+        : exercise.progression.action === "maintain"
+          ? "bg-ink text-cream"
+          : "bg-sand text-ink";
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <span className={["rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em]", toneClass].join(" ")}>
+          {exercise.progression.label}
+        </span>
+        <p className="text-xs uppercase tracking-[0.18em] text-moss">Next action</p>
+      </div>
+      <div className="rounded-[22px] border border-black/8 bg-white/70 px-4 py-3">
+        <p className="text-sm font-semibold leading-6 text-ink">{exercise.progression.instruction}</p>
+        <p className="mt-1 text-sm leading-6 text-ink/64">{exercise.progression.reason}</p>
+      </div>
+    </div>
+  );
+}
+
 function SavedFeedbackSummary({ exercise }: { exercise: WorkoutExercise }) {
   if (!hasSavedFeedback(exercise)) {
     return null;
@@ -329,12 +359,7 @@ export function WorkoutCard({ exercise, index, experienceLevel }: WorkoutCardPro
               </div>
             </div>
 
-            {exercise.loadGuidance ? (
-              <div className="rounded-[24px] bg-moss px-4 py-4 text-sm leading-6 text-cream">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cream/65">Start here</p>
-                <p className="mt-2">{exercise.loadGuidance}</p>
-              </div>
-            ) : null}
+            <ProgressionBadge exercise={exercise} />
 
             {exercise.lastPerformance ? (
               <div className="rounded-[24px] bg-white/60 px-4 py-4 text-sm leading-6 text-ink/72">
@@ -347,6 +372,7 @@ export function WorkoutCard({ exercise, index, experienceLevel }: WorkoutCardPro
 
         {experienceLevel === "intermediate" ? (
           <div className="grid gap-3">
+            <ProgressionBadge exercise={exercise} />
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-[24px] bg-white/60 p-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-moss">Last performance</p>
@@ -372,6 +398,9 @@ export function WorkoutCard({ exercise, index, experienceLevel }: WorkoutCardPro
 
         {experienceLevel === "advanced" ? (
           <div className="grid grid-cols-2 gap-3 text-sm text-ink/78">
+            <div className="col-span-2">
+              <ProgressionBadge exercise={exercise} />
+            </div>
             <div className="rounded-[24px] bg-white/60 p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-moss">Target</p>
               <p className="mt-2 text-sm font-semibold leading-6 text-ink">

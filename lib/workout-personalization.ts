@@ -3,6 +3,7 @@ import type {
   ExperienceLevel,
   ExerciseDifficultyFeedback,
   WorkoutExercise,
+  WorkoutExerciseProgression,
   WorkoutSession,
 } from "@/lib/types";
 
@@ -48,15 +49,27 @@ function formatWeight(value: number, unit: string) {
   return `${rounded}${unit}`;
 }
 
-function getUpperRepTarget(reps: string) {
+function getRepRange(reps: string) {
   const rangeMatch = reps.match(/(\d+)\s*-\s*(\d+)/);
 
   if (rangeMatch) {
-    return Number(rangeMatch[2]);
+    return {
+      low: Number(rangeMatch[1]),
+      high: Number(rangeMatch[2]),
+    };
   }
 
   const singleMatch = reps.match(/(\d+)/);
-  return singleMatch ? Number(singleMatch[1]) : null;
+
+  if (!singleMatch) {
+    return null;
+  }
+
+  const value = Number(singleMatch[1]);
+  return {
+    low: value,
+    high: value,
+  };
 }
 
 function formatLastPerformance(exercise: WorkoutExercise) {
@@ -101,76 +114,170 @@ function findLatestExerciseHistory(
   return undefined;
 }
 
-function inferGuidedLoadSuggestion(exercise: WorkoutExercise, previous?: WorkoutExercise) {
-  if (exercise.loadGuidance) {
-    return exercise.loadGuidance;
+function buildFallbackInstruction(exercise: WorkoutExercise, experienceLevel: ExperienceLevel) {
+  if (experienceLevel === "beginner") {
+    return "Start with a light-to-moderate load you can control for every rep.";
   }
 
-  if (previous?.feedback?.difficulty === "too_hard") {
-    return "Start lighter than last time and aim for smooth, controlled reps.";
-  }
-
-  if (previous?.feedback?.difficulty === "too_easy") {
-    return "Start light, then move slightly heavier only if every rep still feels clean.";
-  }
-
-  if (previous?.feedback?.loggedWeight) {
-    return `Use a comfortable load near your last session (${previous.feedback.loggedWeight}) if form still feels solid.`;
-  }
-
-  return "Start with a light-to-moderate load you can control for every rep.";
-}
-
-function inferIntermediateLoadSuggestion(exercise: WorkoutExercise, previous?: WorkoutExercise) {
-  if (exercise.loadGuidance) {
-    return exercise.loadGuidance;
-  }
-
-  const previousWeight = parseWeight(previous?.feedback?.loggedWeight);
-
-  if (!previousWeight) {
-    return "Find a working weight that leaves 1-2 good reps in reserve.";
-  }
-
-  const previousReps = previous?.feedback?.loggedReps;
-  const difficulty = previous?.feedback?.difficulty;
-  const repCeiling = getUpperRepTarget(exercise.reps);
-  let nextWeight = previousWeight.value;
-
-  if (difficulty === "too_easy") {
-    nextWeight += getProgressionStep(previousWeight.unit, previousWeight.value);
-  } else if (difficulty === "too_hard") {
-    nextWeight = Math.max(previousWeight.value - getProgressionStep(previousWeight.unit, previousWeight.value), 0);
-  } else if (difficulty !== "need_alternative" && repCeiling && previousReps && previousReps >= repCeiling) {
-    nextWeight += getProgressionStep(previousWeight.unit, previousWeight.value);
-  }
-
-  return `Try ${formatWeight(nextWeight, previousWeight.unit)} for ${exercise.reps}.`;
-}
-
-function inferAdvancedLoadSuggestion(exercise: WorkoutExercise, previous?: WorkoutExercise) {
-  if (exercise.loadGuidance) {
-    return exercise.loadGuidance;
-  }
-
-  const previousWeight = parseWeight(previous?.feedback?.loggedWeight);
-
-  if (!previousWeight) {
+  if (experienceLevel === "advanced") {
     return exercise.intensityTarget
-      ? `Work up to ${exercise.intensityTarget}.`
+      ? `Build to ${exercise.intensityTarget} and keep 1-2 reps in reserve.`
       : "Build to a strong working load without grinding reps.";
   }
 
-  const step = getProgressionStep(previousWeight.unit, previousWeight.value);
-  const difficulty = previous?.feedback?.difficulty;
-  const nextWeight =
-    difficulty === "too_easy"
-      ? previousWeight.value + step
-      : difficulty === "too_hard"
-        ? Math.max(previousWeight.value - step, 0)
-        : previousWeight.value;
+  return "Pick a working weight that leaves 1-2 good reps in reserve.";
+}
 
-  return `Planned load: ${formatWeight(nextWeight, previousWeight.unit)}${exercise.intensityTarget ? ` at ${exercise.intensityTarget}` : ""}.`;
+function buildStartProgression(
+  exercise: WorkoutExercise,
+  experienceLevel: ExperienceLevel,
+): WorkoutExerciseProgression {
+  return {
+    action: "start",
+    label: "NEW",
+    instruction: buildFallbackInstruction(exercise, experienceLevel),
+    reason: "No matching history yet, so establish a clean baseline today.",
+    source: "fallback",
+  };
+}
+
+function buildDecisionFromHistory(
+  exercise: WorkoutExercise,
+  previous: WorkoutExercise,
+  experienceLevel: ExperienceLevel,
+): WorkoutExerciseProgression {
+  const previousWeight = parseWeight(previous.feedback?.loggedWeight);
+  const previousReps = previous.feedback?.loggedReps;
+  const difficulty = previous.feedback?.difficulty;
+  const repRange = getRepRange(exercise.reps);
+
+  if (previousWeight) {
+    const step = getProgressionStep(previousWeight.unit, previousWeight.value);
+
+    if (difficulty === "too_hard") {
+      const nextWeight = Math.max(previousWeight.value - step, 0);
+      return {
+        action: "decrease",
+        label: `DOWN ${formatWeight(step, previousWeight.unit)}`,
+        instruction: `Reduce to ${formatWeight(nextWeight, previousWeight.unit)} for ${exercise.reps}.`,
+        reason: "Last session was marked too hard, so back off one step and rebuild quality.",
+        targetWeight: formatWeight(nextWeight, previousWeight.unit),
+        source: "history",
+      };
+    }
+
+    if (difficulty === "too_easy") {
+      const nextWeight = previousWeight.value + step;
+      return {
+        action: "increase",
+        label: `UP ${formatWeight(step, previousWeight.unit)}`,
+        instruction: `Increase to ${formatWeight(nextWeight, previousWeight.unit)} for ${exercise.reps}.`,
+        reason: "Last session felt easy, so move up one clear progression step.",
+        targetWeight: formatWeight(nextWeight, previousWeight.unit),
+        source: "history",
+      };
+    }
+
+    if (difficulty === "need_alternative") {
+      return {
+        action: "decrease",
+        label: "EASIER",
+        instruction: `Reduce load or use the fallback option for ${exercise.reps}.`,
+        reason: "The previous attempt needed an easier variation, so keep today clearly more manageable.",
+        source: "history",
+      };
+    }
+
+    if (difficulty === "need_clarity") {
+      return {
+        action: "maintain",
+        label: "SAME",
+        instruction: `Maintain ${formatWeight(previousWeight.value, previousWeight.unit)} and prioritize clean form for ${exercise.reps}.`,
+        reason: "Form confidence was the limiter, so do not increase until execution feels clearer.",
+        targetWeight: formatWeight(previousWeight.value, previousWeight.unit),
+        source: "history",
+      };
+    }
+
+    if (repRange && previousReps && previousReps >= repRange.high) {
+      const nextWeight = previousWeight.value + step;
+      return {
+        action: "increase",
+        label: `UP ${formatWeight(step, previousWeight.unit)}`,
+        instruction: `Increase to ${formatWeight(nextWeight, previousWeight.unit)} for ${exercise.reps}.`,
+        reason: "You hit the top of the target rep range, so progression should move to the next load.",
+        targetWeight: formatWeight(nextWeight, previousWeight.unit),
+        source: "history",
+      };
+    }
+
+    if (repRange && previousReps && previousReps < repRange.low) {
+      return {
+        action: "maintain",
+        label: "SAME",
+        instruction: `Maintain ${formatWeight(previousWeight.value, previousWeight.unit)} and reach at least ${repRange.low} reps before increasing.`,
+        reason: "The previous set did not yet clear the target range, so hold the load steady.",
+        targetWeight: formatWeight(previousWeight.value, previousWeight.unit),
+        source: "history",
+      };
+    }
+
+    return {
+      action: "maintain",
+      label: "SAME",
+      instruction:
+        difficulty === "just_right"
+          ? `Maintain ${formatWeight(previousWeight.value, previousWeight.unit)} and try to beat last time within ${exercise.reps}.`
+          : `Maintain ${formatWeight(previousWeight.value, previousWeight.unit)} for ${exercise.reps}.`,
+      reason:
+        difficulty === "just_right"
+          ? "Last session was on target, so keep the load and earn the next increase with more reps or cleaner work."
+          : "Current data supports keeping the same load for the next session.",
+      targetWeight: formatWeight(previousWeight.value, previousWeight.unit),
+      source: "history",
+    };
+  }
+
+  if (difficulty === "too_hard") {
+    return {
+      action: "decrease",
+      label: "LIGHTER",
+      instruction: `Reduce load slightly and keep the reps at ${exercise.reps}.`,
+      reason: "No exact weight was logged, but the last attempt was flagged too hard.",
+      source: "history",
+    };
+  }
+
+  if (difficulty === "too_easy") {
+    return {
+      action: "increase",
+      label: "HEAVIER",
+      instruction: `Increase load slightly and keep the reps at ${exercise.reps}.`,
+      reason: "No exact weight was logged, but the last attempt was flagged too easy.",
+      source: "history",
+    };
+  }
+
+  return {
+    action: "maintain",
+    label: "BASELINE",
+    instruction:
+      previousReps && repRange
+        ? `Use a similar load and aim to move from ${previousReps} reps toward the top of ${exercise.reps}.`
+        : buildFallbackInstruction(exercise, experienceLevel),
+    reason: "History exists, but the logged data is incomplete, so use the previous effort as a stable baseline.",
+    source: "history",
+  };
+}
+
+export function getDeterministicProgression(
+  exercise: WorkoutExercise,
+  previous: WorkoutExercise | undefined,
+  experienceLevel: ExperienceLevel,
+) {
+  return previous
+    ? buildDecisionFromHistory(exercise, previous, experienceLevel)
+    : buildStartProgression(exercise, experienceLevel);
 }
 
 export function personalizeWorkoutExercise(
@@ -180,20 +287,14 @@ export function personalizeWorkoutExercise(
 ): WorkoutExercise {
   const previous = findLatestExerciseHistory(sessions, exercise.name);
   const previousPerformance = previous ? formatLastPerformance(previous) : undefined;
-
-  if (experienceLevel === "beginner") {
-    return {
-      ...exercise,
-      lastPerformance: previousPerformance,
-      loadGuidance: inferGuidedLoadSuggestion(exercise, previous),
-    };
-  }
+  const progression = getDeterministicProgression(exercise, previous, experienceLevel);
 
   if (experienceLevel === "advanced") {
     return {
       ...exercise,
       lastPerformance: previousPerformance,
-      loadGuidance: inferAdvancedLoadSuggestion(exercise, previous),
+      loadGuidance: progression.instruction,
+      progression,
       intensityTarget: exercise.intensityTarget ?? "RPE 8-9",
       tempo: exercise.tempo ?? "Controlled tempo",
       fatigueNote: exercise.fatigueNote ?? "Stop 1-2 reps before breakdown in form.",
@@ -203,8 +304,17 @@ export function personalizeWorkoutExercise(
   return {
     ...exercise,
     lastPerformance: previousPerformance,
-    loadGuidance: inferIntermediateLoadSuggestion(exercise, previous),
+    loadGuidance: progression.instruction,
+    progression,
   };
+}
+
+export function personalizeWorkoutExercises(
+  exercises: WorkoutExercise[],
+  experienceLevel: ExperienceLevel,
+  sessions: WorkoutSession[],
+) {
+  return exercises.map((exercise) => personalizeWorkoutExercise(exercise, experienceLevel, sessions));
 }
 
 export function getExperienceCardCopy(experienceLevel: ExperienceLevel) {

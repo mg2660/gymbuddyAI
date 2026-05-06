@@ -10,6 +10,7 @@ export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
 export type ExerciseFeedbackMode = "lazy" | "quick" | "full";
 export type ExerciseCompletionStatus = "completed" | "skipped" | "substituted";
 export type WorkoutDayStatus = "completed_in_app" | "completed_elsewhere" | "rest_day" | "missed";
+export type WorkoutProgressionAction = "increase" | "maintain" | "decrease" | "start";
 export type ExerciseDifficultyFeedback =
   | "too_easy"
   | "just_right"
@@ -71,6 +72,15 @@ export interface WorkoutExerciseFeedback {
   notes?: string;
 }
 
+export interface WorkoutExerciseProgression {
+  action: WorkoutProgressionAction;
+  label: string;
+  instruction: string;
+  reason: string;
+  targetWeight?: string;
+  source: "history" | "fallback";
+}
+
 export interface WorkoutExercise {
   name: string;
   muscleGroup: string;
@@ -86,6 +96,7 @@ export interface WorkoutExercise {
   tempo?: string;
   advancedTechnique?: string;
   fatigueNote?: string;
+  progression?: WorkoutExerciseProgression;
   feedback?: WorkoutExerciseFeedback;
 }
 
