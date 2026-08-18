@@ -11,10 +11,18 @@ export function AuthForm() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [showPassword, setShowPassword] = useState(false); // 👈 NEW
+  const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
+
+  function getEmailRedirectUrl() {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    return `${window.location.origin}/dashboard`;
+  }
 
   async function getPostAuthRoute() {
     const {
@@ -32,6 +40,17 @@ export function AuthForm() {
     return profile ? "/dashboard" : "/onboarding";
   }
 
+  function getFriendlyAuthError(submissionError: unknown) {
+    const message =
+      submissionError instanceof Error ? submissionError.message : "Unable to reach the authentication service.";
+
+    if (message.toLowerCase().includes("failed to fetch")) {
+      return "Unable to reach Supabase. Check that your Supabase project is live, your deployed env vars are correct, and your current site URL is allowed in Supabase Auth.";
+    }
+
+    return message;
+  }
+
   async function handleSubmit(formData: FormData) {
     const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "");
@@ -45,42 +64,43 @@ export function AuthForm() {
     }
 
     startTransition(async () => {
-      if (mode === "sign_up") {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: "https://gymbuddy-ai.vercel.app", // 👈 FIXED
-          },
-        });
+      try {
+        if (mode === "sign_up") {
+          const { error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              emailRedirectTo: getEmailRedirectUrl(),
+            },
+          });
 
-        if (signUpError) {
-          setError(signUpError.message);
+          if (signUpError) {
+            setError(signUpError.message);
+            return;
+          }
+
+          setMessage("Account created. Check your email to verify, then continue.");
+          router.refresh();
+          router.push("/onboarding");
           return;
         }
 
-        setMessage(
-          "Account created. Check your email to verify, then continue."
-        );
-        router.refresh();
-        router.push("/onboarding");
-        return;
-      }
-
-      const { error: signInError } =
-        await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-      if (signInError) {
-        setError(signInError.message);
-        return;
-      }
+        if (signInError) {
+          setError(signInError.message);
+          return;
+        }
 
-      const nextRoute = await getPostAuthRoute();
-      router.refresh();
-      router.push(nextRoute);
+        const nextRoute = await getPostAuthRoute();
+        router.refresh();
+        router.push(nextRoute);
+      } catch (submissionError) {
+        setError(getFriendlyAuthError(submissionError));
+      }
     });
   }
 
@@ -91,9 +111,7 @@ export function AuthForm() {
           {mode === "sign_up" ? "Create account" : "Welcome back"}
         </p>
         <h2 className="text-2xl font-semibold text-ink">
-          {mode === "sign_up"
-            ? "Start your training setup"
-            : "Continue your workout flow"}
+          {mode === "sign_up" ? "Start your training setup" : "Continue your workout flow"}
         </h2>
       </div>
 
@@ -119,7 +137,6 @@ export function AuthForm() {
       </div>
 
       <form action={handleSubmit} className="mt-6 space-y-4">
-        {/* Email */}
         <div className="space-y-2">
           <label htmlFor="email" className="text-sm font-medium text-ink">
             Email
@@ -134,7 +151,6 @@ export function AuthForm() {
           />
         </div>
 
-        {/* Password with toggle */}
         <div className="space-y-2">
           <label htmlFor="password" className="text-sm font-medium text-ink">
             Password
@@ -144,7 +160,7 @@ export function AuthForm() {
             <input
               id="password"
               name="password"
-              type={showPassword ? "text" : "password"} // 👈 toggle
+              type={showPassword ? "text" : "password"}
               className="w-full rounded-2xl border border-black/10 bg-white/70 px-4 py-3 pr-12 text-sm outline-none transition focus:border-moss"
               placeholder="Minimum 6 characters"
               required
@@ -154,34 +170,23 @@ export function AuthForm() {
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-sm opacity-70 hover:opacity-100"
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              {showPassword ? "🙈" : "👁️"}
+              {showPassword ? "Hide" : "Show"}
             </button>
           </div>
         </div>
 
-        {error ? (
-          <p className="rounded-2xl bg-red-100 px-4 py-3 text-sm text-red-700">
-            {error}
-          </p>
-        ) : null}
+        {error ? <p className="rounded-2xl bg-red-100 px-4 py-3 text-sm text-red-700">{error}</p> : null}
 
-        {message ? (
-          <p className="rounded-2xl bg-emerald-100 px-4 py-3 text-sm text-emerald-700">
-            {message}
-          </p>
-        ) : null}
+        {message ? <p className="rounded-2xl bg-emerald-100 px-4 py-3 text-sm text-emerald-700">{message}</p> : null}
 
         <button
           type="submit"
           disabled={isPending}
           className="w-full rounded-full bg-ink px-5 py-4 text-sm font-semibold text-cream transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isPending
-            ? "Working..."
-            : mode === "sign_up"
-            ? "Create account"
-            : "Sign in"}
+          {isPending ? "Working..." : mode === "sign_up" ? "Create account" : "Sign in"}
         </button>
       </form>
     </div>
