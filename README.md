@@ -2,6 +2,8 @@
 
 Gym Buddy AI is a mobile-first AI workout planner and tracker built to remove decision fatigue from training.
 
+For a codebase and architecture deep dive, see [TECHNICAL_README.md](</D:/work/GymBuddy/TECHNICAL_README.md>).
+
 The product goal is simple:
 
 `From "I don't know what to do today" -> to "I just open the app and follow the plan."`

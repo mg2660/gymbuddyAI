@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-type Mode = "sign_in" | "sign_up";
+type Mode = "sign_in" | "sign_up" | "password_reset";
 
 export function AuthForm() {
   const [mode, setMode] = useState<Mode>("sign_up");
@@ -22,6 +22,14 @@ export function AuthForm() {
     }
 
     return `${window.location.origin}/dashboard`;
+  }
+
+  function getPasswordResetRedirectUrl() {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    return `${window.location.origin}/auth/update-password`;
   }
 
   async function getPostAuthRoute() {
@@ -58,13 +66,27 @@ export function AuthForm() {
     setError(null);
     setMessage(null);
 
-    if (!email || !password) {
-      setError("Email and password are required.");
+    if (!email || (mode !== "password_reset" && !password)) {
+      setError(mode === "password_reset" ? "Enter your email address." : "Email and password are required.");
       return;
     }
 
     startTransition(async () => {
       try {
+        if (mode === "password_reset") {
+          const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: getPasswordResetRedirectUrl(),
+          });
+
+          if (resetError) {
+            setError(resetError.message);
+            return;
+          }
+
+          setMessage("If an account exists for that email, we sent a password-reset link.");
+          return;
+        }
+
         if (mode === "sign_up") {
           const { error: signUpError } = await supabase.auth.signUp({
             email,
@@ -108,14 +130,19 @@ export function AuthForm() {
     <div className="card-surface w-full rounded-[30px] border border-black/5 p-5 shadow-card sm:p-8">
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-moss">
-          {mode === "sign_up" ? "Create account" : "Welcome back"}
+          {mode === "sign_up" ? "Create account" : mode === "password_reset" ? "Password reset" : "Welcome back"}
         </p>
         <h2 className="text-2xl font-semibold text-ink">
-          {mode === "sign_up" ? "Start your training setup" : "Continue your workout flow"}
+          {mode === "sign_up"
+            ? "Start your training setup"
+            : mode === "password_reset"
+              ? "Get back into your workout flow"
+              : "Continue your workout flow"}
         </h2>
       </div>
 
-      <div className="flex items-center gap-2 rounded-full bg-sand p-1 text-sm">
+      {mode !== "password_reset" ? (
+        <div className="flex items-center gap-2 rounded-full bg-sand p-1 text-sm">
         <button
           type="button"
           onClick={() => setMode("sign_up")}
@@ -134,10 +161,12 @@ export function AuthForm() {
         >
           Sign In
         </button>
-      </div>
+        </div>
+      ) : null}
 
       <form action={handleSubmit} className="mt-6 space-y-4">
-        <div className="space-y-2">
+        {mode !== "password_reset" ? (
+          <div className="space-y-2">
           <label htmlFor="email" className="text-sm font-medium text-ink">
             Email
           </label>
@@ -149,7 +178,8 @@ export function AuthForm() {
             placeholder="you@example.com"
             required
           />
-        </div>
+          </div>
+        ) : null}
 
         <div className="space-y-2">
           <label htmlFor="password" className="text-sm font-medium text-ink">
@@ -186,8 +216,36 @@ export function AuthForm() {
           disabled={isPending}
           className="w-full rounded-full bg-ink px-5 py-4 text-sm font-semibold text-cream transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isPending ? "Working..." : mode === "sign_up" ? "Create account" : "Sign in"}
+          {isPending ? "Working..." : mode === "sign_up" ? "Create account" : mode === "password_reset" ? "Email me a reset link" : "Sign in"}
         </button>
+
+        {mode === "sign_in" ? (
+          <button
+            type="button"
+            onClick={() => {
+              setMode("password_reset");
+              setError(null);
+              setMessage(null);
+            }}
+            className="w-full text-sm font-medium text-moss underline-offset-4 hover:underline"
+          >
+            Forgot your password?
+          </button>
+        ) : null}
+
+        {mode === "password_reset" ? (
+          <button
+            type="button"
+            onClick={() => {
+              setMode("sign_in");
+              setError(null);
+              setMessage(null);
+            }}
+            className="w-full text-sm font-medium text-moss underline-offset-4 hover:underline"
+          >
+            Back to sign in
+          </button>
+        ) : null}
       </form>
     </div>
   );
